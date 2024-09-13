@@ -77,7 +77,7 @@ def reporting():
     """
     # TODO: Implement reporting aggregation - Example aggregation: Count of crimes by crime type and broad outcome category
     try:
-        os.makedirs('visualisation_dataframe')
+        os.makedirs('reporting_dataframe')
     except:
         pass
     
@@ -87,6 +87,52 @@ def reporting():
     
     return
 
-staging()
-primary()
-reporting()
+def main(pipeline_start='staging', pipeline_goal='all'):
+    """
+    The function performs the pipeline action for the selected data.
+    The order of execution should be 'staging' -> 'primary' -> 'reporting' -> 'all'.
+    The pipeline_goal CANNOT be before pipeline_start, e.g., pipeline_start='reporting', pipeline_goal='primary' is not allowed.
+    """
+    print('Pipeline Execution Started.')
+    print(f'Data Layer Start: {pipeline_start}')
+    print(f'Data Layer Goal: {pipeline_goal}')
+
+    pipeline_order = ['staging', 'primary', 'reporting', 'all']
+
+    try:
+        if pipeline_start not in pipeline_order or pipeline_goal not in pipeline_order:
+            raise ValueError("Invalid pipeline_start or pipeline_goal specified. Please choose 'staging', 'primary', 'reporting', 'all'.")
+
+        if pipeline_order.index(pipeline_start) > pipeline_order.index(pipeline_goal):
+            raise ValueError("pipeline_goal cannot be before pipeline_start.")
+
+        if pipeline_start == 'staging':
+            staging()
+            print('Staging Completed')
+            if pipeline_goal == 'staging':
+                print(f'Target Pipeline: {pipeline_goal} Reached')
+                return
+
+        if pipeline_start in ['staging', 'primary']:
+            primary()
+            print('Primary Completed')
+            if pipeline_goal == 'primary':
+                print(f'Target Pipeline: {pipeline_goal} Reached')
+                return
+
+        if pipeline_start in ['staging', 'primary', 'reporting']:
+            reporting()
+            print('Reporting Completed')
+            if pipeline_goal == 'reporting':
+                print(f'Target Pipeline: {pipeline_goal} Reached')
+                return
+
+        if pipeline_goal == 'all':
+            print(f'Target Pipeline: {pipeline_goal} Reached')
+
+    except Exception as e:
+        print(f'ERROR: {e}')
+
+    return
+
+main()
