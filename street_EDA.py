@@ -156,7 +156,7 @@ def create_numberic_checked_longitute_lantitude_crime_count_df(df):
 def loop_all_functions(regions_dict):
     """
     Loops through the provided functions, applying them to each region's DataFrame.
-    Saves the output to CSV files in the 'visualisation_dataframe' directory.
+    Saves the output to CSV files in the 'reporting_dataframe' directory.
     
     Args:
         regions_dict (dict): Dictionary where keys are region names and values are DataFrames with crime data.
@@ -169,7 +169,7 @@ def loop_all_functions(regions_dict):
                         create_top_5_crime_count_LSOA_name_df, 
                         create_numberic_checked_longitute_lantitude_crime_count_df]
     
-    os.chdir('visualisation_dataframe')
+    os.chdir('reporting_dataframe')
     for f in report_functions:
         for key, values in regions_dict.items():
             street_df = f(values)
