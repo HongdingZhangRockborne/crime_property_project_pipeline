@@ -46,7 +46,7 @@ def primary():
     join, new columns
     """
     #reading the staged csv for each location as a dictionary
-    staged_csv_dict = read_staged_csv()
+    staged_csv_dict = read_pipeline_csv_to_dict('staged')
 
     
     #seperate yyyy-mm to 2 columns: yyyy and mm
@@ -67,26 +67,24 @@ def primary():
     #save the staged df as csv in staged_dateframe
     os.chdir('primary_dataframe')
     for key, value in staged_csv_dict.items():
-        value.to_csv(f'staged_{key}')
+        value.to_csv(f'primary_{key.split('_')[1]}_df')
     os.chdir('..')
 
     return
 
-
-
-
-
-
-
 #reporting
-
-try:
-    os.makedirs('visualisaiton_dataframe')
-except:
-    pass
-
-os.chdir('cleaned_dataframe')
-
-regions_dict = read_csv_for_report()
-
-loop_all_functions(regions_dict)
+def reporting():
+    """
+    Reporting Layer: Store the aggregated reporting data to a CSV file.
+    """
+    # TODO: Implement reporting aggregation - Example aggregation: Count of crimes by crime type and broad outcome category
+    try:
+        os.makedirs('visualisation_dataframe')
+    except:
+        pass
+    
+    primary_dict = read_pipeline_csv_to_dict('primary')
+    
+    loop_all_functions(primary_dict)
+    
+    return

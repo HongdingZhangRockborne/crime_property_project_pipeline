@@ -155,11 +155,12 @@ def dic_apply_categorization(dic):
         dic[key] = apply_categorization(value)
     return dic
 
-def read_staged_csv():
+
+def read_pipeline_csv_to_dict(step):
     """
-    
+    step = 'staged', 'primary'
     """
-    os.chdir('staged_dataframe/')
+    os.chdir(f'{step}_dataframe/')
     staged_dict = {}
 
     for file in os.listdir():
