@@ -6,7 +6,7 @@ from street_EDA import *
 
 def staging():
     """
-    Ingest the data, apply cleaning, and store to CSV files for staging.
+    Ingest the data, apply cleaning, and store to CSV files for primary.
     """
     # ingest rawd data
     street_regional_dic = combined_dataset('street')
@@ -41,9 +41,7 @@ def staging():
 
 def primary():
     """
-    TASK: Primary Layer: Store the transformed data to a CSV file.
-    HINT: Some functions from the PRE-PROCESSING AND TRANSFORMATION code applies here
-    join, new columns
+    Store the transformed data to a CSV files.
     """
     #reading the staged csv for each location as a dictionary
     staged_csv_dict = read_pipeline_csv_to_dict('staged')
@@ -75,7 +73,7 @@ def primary():
 #reporting
 def reporting():
     """
-    Reporting Layer: Store the aggregated reporting data to a CSV file.
+    Reporting Layer: Store the aggregated reporting data to a CSV files.
     """
     # TODO: Implement reporting aggregation - Example aggregation: Count of crimes by crime type and broad outcome category
     try:
@@ -88,3 +86,7 @@ def reporting():
     loop_all_functions(primary_dict)
     
     return
+
+staging()
+primary()
+reporting()
