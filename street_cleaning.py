@@ -9,13 +9,12 @@ def extract_city_name_from_file():
     Returns:
     Region names extract from all the files within a folder.
     """
-    os.chdir('police_data')#Changing directory to police_data
     os.chdir(os.listdir()[0])
     file_list = os.listdir() #listing out all the file names.
 
     regions = [filename.split('-')[2:-1] for filename in file_list]  # spliting and extracting the region names.
     regions = ['-'.join(region) for region in regions] #join region names together.
-    os.chdir('../../')
+    os.chdir('../')
 
     return regions
 
