@@ -1,5 +1,6 @@
 from street_cleaning import *
 from street_EDA import *
+from postcode_and_price_cleaning import *
 
 #Primary and staging steps
 
@@ -8,7 +9,7 @@ def staging():
     """
     Ingest the data, apply cleaning, and store to CSV files for primary.
     """
-    # ingest rawd data
+    # ingest raw data
     street_regional_dic = combined_dataset('street')
 
     #dropping the 'Context' column for all DataFrames
@@ -36,6 +37,10 @@ def staging():
     for key, value in street_regional_dic.items():
         value.to_csv(f'staged_{key}')
     os.chdir('..')
+
+
+    uk_post_df = read_and_clean_uk_postcode()
+
         
     return
 
@@ -67,6 +72,10 @@ def primary():
     for key, value in staged_csv_dict.items():
         value.to_csv(f'primary_{key.split('_')[1]}_df')
     os.chdir('..')
+
+    #Postcode analysis, merging the postcode df to the street df
+    for key, value in staged_csv_dict.items():
+        merge_coordinate_df(key, value)
 
     return
 
