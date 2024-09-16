@@ -66,6 +66,120 @@ def merge_coordinate_df(street_df_name, street_df):
 
     return 
 
+def read_pp_df(file_name):
+    """
+    file_name: str, name of the CSV file
+    Function create a dataframe form the file name (str), then produces the DataFrame with the designated column names.
+    """
+    pp_column_names = pp_column_names = ['Transaction unique identifier',
+                  'Price',
+                  'Date of Transfer',
+                  'Postcode',
+                  'Property Type',
+                  'Old/New',
+                  'Duration',
+                  'PAON',
+                  'SAON',
+                  'Street',
+                  'Locality',
+                  'Town/City',
+                  'District',
+                  'County',
+                  'PPD Category Type',
+                  'Record Status - monthly file only']
+    return pd.read_csv(file_name, names=pp_column_names)
 
+def pp_keep_specified_columns(df):
+    """
+    df: pp DataFrame
+    The function takes in the pp df and only keeps the relevant columns
+    """
+    df = df[['Transaction unique identifier',
+         'Price',
+         'Date of Transfer',
+         'Postcode',
+         'Property Type',
+         'Old/New',
+         'Street',
+         'Duration']]
+    return df
+
+def pp_replace_street(df):
+    """
+    df: pp DataFrame
+    Function replaces the NaN values in the 'Street' column to 'Street Not Availible'
+    """
+    df['Street'] = df['Street'].fillna('Street Not Availible')
+    return df
+
+def pp_property_type_full_name(df):
+    """
+    df: pp DataFrame
+    Function takes in the pp df and replace the property type innitials to full name.
+    """
+    df['Property Type'] = df['Property Type'].apply(lambda x: 'Detached' if x == 'D' else 
+                                         ('Semi-Detached' if x == 'S' else 
+                                         ('Terraced' if x == 'T' else 
+                                         ('Flats/Maisonettes' if x == 'F' else 'Other'))))
+    return df
+
+def pp_old_new_full_name(df):
+    """
+    df: pp DataFrame
+    The function takes in the pp df and returns the 'Old/New' with non-abbreviated form.
+    """
+    df['Old/New'] = df['Old/New'].apply(lambda x : 'New' if x == 'N' else ('Old' if x == 'O' else 'Other'))
+    return df
+
+def pp_to_date_format(df):
+    """
+    df: pp DataFrame
+    The function takes in the pp df and returns the Date of Transfer to date type.
+    """
+    df['Date of Transfer'] = pd.to_datetime(df['Date of Transfer'], format='%Y-%m-%d %H:%M')
+
+    return df
+
+def pp_duration_full_name(df):
+    """
+    df: panda.DataFrame for pp
+    Function returns the non-abbreviated duration values. 
+    """
+    df['Duration'] = df['Duration'].apply(lambda x : 'Freehold' if x == 'F' else ('Leasehold' if x == 'L' else 'Other'))
+    return df
+
+def create_pp_df():
+    """
+    pp = Postcode Price
+    This cod only works until 2024.
+    """
+    os.chdir('properties_sold')
+    cleaned_all_year_pp_df = pd.DataFrame()
+
+    file_lst = os.listdir()
+    for f in file_lst:
+        if f == 'pp-monthly-update-new-version':
+            pp = read_pp_df('pp-monthly-update-new-version')
+            pp_to_date_format(pp)
+            pp = pp[pp['Date of Transfer'].dt.year == 2024]
+        else:
+            pp = read_pp_df(f)
+            pp_to_date_format(pp)
+
+        pp = pp_keep_specified_columns(pp)
+        pp = pp.dropna(subset='Postcode')
+        pp_replace_street(pp)
+        pp_property_type_full_name(pp)
+        pp_old_new_full_name(pp)
+        pp_duration_full_name(pp)
+
+        cleaned_all_year_pp_df = pd.concat([cleaned_all_year_pp_df, pp], ignore_index=True)
+
+    
+    cleaned_all_year_pp_df.to_csv('cleaned_all_year_pp_df')
+
+    os.chdir('../')
+
+    return
 
 
