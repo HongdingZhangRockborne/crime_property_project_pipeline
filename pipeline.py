@@ -39,9 +39,12 @@ def staging():
     os.chdir('..')
 
 
-    uk_post_df = read_and_clean_uk_postcode()
+    #uk postcode
+    try:
+        uk_post_df = read_and_clean_uk_postcode()
+    except:
+        pass
 
-        
     return
 
 def primary():
@@ -74,8 +77,18 @@ def primary():
     os.chdir('..')
 
     #Postcode analysis, merging the postcode df to the street df
-    for key, value in staged_csv_dict.items():
-        merge_coordinate_df(key, value)
+    try:
+        for key, value in staged_csv_dict.items():
+            merge_coordinate_df(key, value)
+    except:
+        pass
+
+    #pricing analysis:
+
+    try:
+        create_pp_df()
+    except:
+        pass
 
     return
 
