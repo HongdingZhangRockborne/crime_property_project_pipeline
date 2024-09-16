@@ -1,10 +1,29 @@
 import pandas as pd
 import os
 
+def extract_city_name_from_file():
+    """
+    Args:
+    The function takes no Args from user, it goes into police data folders and read the names of the files as input.
+
+    Returns:
+    Region names extract from all the files within a folder.
+    """
+    os.chdir(os.listdir()[0])
+    file_list = os.listdir() #listing out all the file names.
+
+    regions = [filename.split('-')[2:-1] for filename in file_list]  # spliting and extracting the region names.
+    regions = ['-'.join(region) for region in regions] #join region names together.
+    os.chdir('../')
+
+    return regions
+
 def combined_dataset(dataset_type):
     """
-    dataset_type = str, the type of data e.g. 'street', 'stop-and-search', 'outcomes'
+    Args:
+    dataset_type (str): the type of data e.g. 'street', 'stop-and-search', 'outcomes'
 
+    Returns:
     The function takes in these arguments and produces a dictionary with region names as keys, and their associated dataframe as values.
     These dataframe are the product of combining the dataset of all the months for each region.
     The function will also print out the files that were not found or caused errors.
@@ -16,7 +35,7 @@ def combined_dataset(dataset_type):
     folder_names_ls = os.listdir()
 
     #Constable names
-    regional_constables_ls = ['kent','south-yorkshire']
+    regional_constables_ls = extract_city_name_from_file()
     
     # initialize the dictionary to store DataFrames for each region
     regional_dic = {}
@@ -61,21 +80,23 @@ def combined_dataset(dataset_type):
     
     return regional_dic
 
-def drop_rows(dict,column):
+def drop_rows(dic,column):
     """
-    dict = dictionary, where the keys are the df names, and the values are the dataframe objects
-    column = str or lst, the name of the column or columns you wish to base your row deletion on
+    Args:
+    dic(dict) = dictionary, where the keys are the df names, and the values are the dataframe objects.
+    column(lst) = the name of the column or columns you wish to base your row deletion on.
 
-    the function takes these arguments and drops the rows that have NaN value in user selected column or columns.
-    This is performed for all the dataframes (values)
+    Returns:
+    The function drops the rows that have NaN value in the user column or columns.
+    This is performed for all the dataframes (values) in the dictionary.
     """
-    for key, value in dict.items():
+    for key, value in dic.items():
         try:
             for c in column:
                 value.dropna(subset= c, inplace=True)
         except:
             pass
-    return dict
+    return dic
 
 def convert_y_m(df):
     """
@@ -83,12 +104,10 @@ def convert_y_m(df):
     and renames 'Month' to 'Date' after converting it to a datetime object.
 
     Args:
-        df (pd.DataFrame): The input DataFrame containing at least a 'Month' column in 'YYYY-MM' format.
+    df(pd.DataFrame): The input DataFrame containing at least a 'Month' column in 'YYYY-MM' format.
 
     Returns:
-        pd.DataFrame: A DataFrame with:
-                      - A 'Date' column (converted from the original 'Month' column) in datetime format.
-                      - Separate 'Date year' and 'Date month' columns, extracted from the original 'Month' column.
+    A df with a separate 'Date year' and 'Date month' columns, extracted from the original 'Month' column.
     """
     temp_df = df.join(df['Month'].str.split('-', n=2, expand=True).rename(columns={0:'Date year', 1:'Date month'}))
     temp_df['Month'] = pd.to_datetime(temp_df['Month'], format='%Y-%m')
@@ -97,17 +116,11 @@ def convert_y_m(df):
 
 def covert_y_m_dic(dic):
     """
-    Converts the 'Month' column in all DataFrames within a dictionary to separate 'Date year' and 'Date month' columns,
-    and renames 'Month' to 'Date' after converting it to a datetime object.
-
     Args:
-        dic (dict): A dictionary where each key is associated with a DataFrame. 
-                    Each DataFrame must contain a 'Month' column in 'YYYY-MM' format.
+    dic (dict): A dictionary where each key is associated with a DataFrame. Each DataFrame must contain a 'Month' column in 'YYYY-MM' format.
 
     Returns:
-        dict: The original dictionary with each DataFrame updated to include:
-              - A 'Date' column (converted from the original 'Month' column) in datetime format.
-              - Separate 'Date year' and 'Date month' columns, extracted from the original 'Month' column.
+    All df from the dic will be converted. 
     """
     for key, value in street_regional_dic.items():
         dic[key] = convert_y_m(value)
@@ -115,8 +128,11 @@ def covert_y_m_dic(dic):
 
 def no_or_near_replace(dic):
     """
-    dic: dictionary, the name of the dictionary that contains the dataframes as values.
-    the function takes in the diction and changes all the 'On or Near' strings in the 'Location' column to 'N Info', for all the DataFrames
+    Args:
+    dic(dict): the name of the dictionary that contains the dataframes as values.
+
+    Returns:
+    Changes all the 'On or Near' strings in the 'Location' column to 'N Info', for all the DataFrames
     """
     for key, value in dic.items():
         if isinstance(value, pd.DataFrame) and 'Location' in value.columns:
@@ -124,6 +140,13 @@ def no_or_near_replace(dic):
     return dic
 
 def categorize_outcome(outcome):
+    """
+    Args:
+    outcome(str): The values in the outcome column.
+
+    Returns:
+    The categorised outcomes.
+    """
     if outcome in ['Unable to prosecute suspect', 
                    'Investigation complete; no suspect identified', 
                    'Status update unavailable']:
@@ -142,24 +165,37 @@ def categorize_outcome(outcome):
 
 def apply_categorization(df):
     """
-    Apply categorization to 'Final Outcome' column.
+    Args:
+    df(pd.DataFrame): police dataframe.
+
+    Returns:
+    Apply categorisation to 'Final Outcome' column.
     """
     df['Broad Outcome Category'] = df['Last outcome category'].apply(categorize_outcome)
     return df
 
 def dic_apply_categorization(dic):
     """
-    Apply categorisation to the dictionary containing dataframe
+    Args:
+    dic(dict): the name of the dictionary that contains the dataframes as values.
+    
+    Returns:
+    Apply categorisation to the dictionary containing dataframe.
     """
     for key, value in dic.items():
         dic[key] = apply_categorization(value)
     return dic
 
-def read_staged_csv():
+
+def read_pipeline_csv_to_dict(step):
     """
+    Args:
+    step(str): Stage of the pipeline:'staged', 'primary'.
     
+    Returns:
+    A dictionary containing the region as the key, and the respetive dataframes as values.
     """
-    os.chdir('staged_dataframe/')
+    os.chdir(f'{step}_dataframe/')
     staged_dict = {}
 
     for file in os.listdir():
