@@ -2,111 +2,130 @@ from street_cleaning import *
 from street_EDA import *
 from postcode_and_price_cleaning import *
 
-#Primary and staging steps
-
+# Primary and staging steps
 
 def staging():
     """
     Ingest the data, apply cleaning, and store to CSV files for primary.
     """
-    # ingest raw data
-    street_regional_dic = combined_dataset('street')
+    print("Starting staging process...")
 
-    #dropping the 'Context' column for all DataFrames
+    # Ingest raw data
+    street_regional_dic = combined_dataset('street')
+    print("Raw data ingested.")
+
+    # Dropping the 'Context' column for all DataFrames
     for key, value in street_regional_dic.items():
         value.drop('Context', axis=1, inplace=True)
+    print("Context column dropped.")
 
     drop_rows(street_regional_dic, ['Longitude', 
                                     'Latitude', 
                                     'Crime ID', 
                                     'Last outcome category',
-                                    'LSOA code','LSOA name'])
-    
-    #Dropping duplciates for 'Crime ID' column.
+                                    'LSOA code', 'LSOA name'])
+    print("Specified columns dropped.")
+
+    # Dropping duplicates for 'Crime ID' column.
     for key, value in street_regional_dic.items():
         value.drop_duplicates(subset='Crime ID', inplace=True)
+    print("Duplicates dropped based on 'Crime ID'.")
 
-    #Making the directory to store the staging data if they don't exist
+    # Making the directory to store the staging data if it doesn't exist
     try:
         os.makedirs('staged_dataframe')
+        print("Directory 'staged_dataframe' created.")
     except:
-        pass
-    
-    #save the staged df as csv in staged_dateframe
+        print("Directory 'staged_dataframe' already exists.")
+
+    # Save the staged DataFrame as CSV in staged_dataframe
     os.chdir('staged_dataframe')
     for key, value in street_regional_dic.items():
         value.to_csv(f'staged_{key}')
     os.chdir('..')
+    print("Staged DataFrames saved to 'staged_dataframe'.")
 
-
-    #uk postcode
+    # UK postcode
     try:
         uk_post_df = read_and_clean_uk_postcode()
+        print("UK postcode data read and cleaned.")
     except:
-        pass
+        print("Failed to read and clean UK postcode data.")
 
     return
 
 def primary():
     """
-    Store the transformed data to a CSV files.
+    Store the transformed data to CSV files.
     """
-    #reading the staged csv for each location as a dictionary
-    staged_csv_dict = read_pipeline_csv_to_dict('staged')
+    print("Starting primary process...")
 
-    
-    #seperate yyyy-mm to 2 columns: yyyy and mm
+    # Reading the staged CSV for each location as a dictionary
+    staged_csv_dict = read_pipeline_csv_to_dict('staged')
+    print("Staged CSVs read into dictionary.")
+
+    # Separate yyyy-mm to 2 columns: yyyy and mm
     for key, value in staged_csv_dict.items():
-        
         staged_csv_dict[key] = convert_y_m(value)
+    print("Converted yyyy-mm to separate yyyy and mm columns.")
 
     no_or_near_replace(staged_csv_dict)
+    print("Replaced 'no' or 'near' values.")
 
     dic_apply_categorization(staged_csv_dict)
-    
-    #Making the directory to store the primary data if they don't exist
+    print("Applied categorization to the DataFrames.")
+
+    # Making the directory to store the primary data if it doesn't exist
     try:
         os.makedirs('primary_dataframe')
+        print("Directory 'primary_dataframe' created.")
     except:
-        pass
-    
-    #save the staged df as csv in staged_dateframe
+        print("Directory 'primary_dataframe' already exists.")
+
+    # Save the primary DataFrame as CSV in primary_dataframe
     os.chdir('primary_dataframe')
     for key, value in staged_csv_dict.items():
-        value.to_csv(f'primary_{key.split('_')[1]}_df')
+        value.to_csv(f'primary_{key.split("_")[1]}_df')
     os.chdir('..')
+    print("Primary DataFrames saved to 'primary_dataframe'.")
 
-    #Postcode analysis, merging the postcode df to the street df
+    # Postcode analysis, merging the postcode df to the street df
     try:
         for key, value in staged_csv_dict.items():
             merge_coordinate_df(key, value)
+        print("Postcode data merged with street data.")
     except:
-        pass
+        print("Failed to merge postcode data with street data.")
 
-    #pricing analysis:
-
+    # Pricing analysis
     try:
         create_pp_df()
+        print("Pricing analysis completed.")
     except:
-        pass
+        print("Failed to complete pricing analysis.")
 
     return
 
-#reporting
+# Reporting
 def reporting():
     """
-    Reporting Layer: Store the aggregated reporting data to a CSV files.
+    Reporting Layer: Store the aggregated reporting data to CSV files.
     """
-    # TODO: Implement reporting aggregation - Example aggregation: Count of crimes by crime type and broad outcome category
+    print("Starting reporting process...")
+
+    # Making the directory to store the reporting data if it doesn't exist
     try:
         os.makedirs('reporting_dataframe')
+        print("Directory 'reporting_dataframe' created.")
     except:
-        pass
-    
+        print("Directory 'reporting_dataframe' already exists.")
+
     primary_dict = read_pipeline_csv_to_dict('primary')
-    
+    print("Primary CSVs read into dictionary.")
+
     loop_all_functions(primary_dict)
-    
+    print("Aggregated data processed for reporting.")
+
     return
 
 def main(pipeline_start='staging', pipeline_goal='all'):
