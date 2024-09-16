@@ -12,3 +12,6 @@ The folder contains the following:
 - Project Statement of Work: word doc.
 - visualisation: .py file, containing all the functions for visualisation and other pre-processing needed
 - readme: txt
+
+
+https://www.freemaptools.com/download-uk-postcode-lat-lng.htm
