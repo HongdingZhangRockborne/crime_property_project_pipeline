@@ -1,6 +1,24 @@
 import pandas as pd
 import os
 
+def extract_city_name_from_file():
+    """
+    Args:
+    The function takes no Args from user, it goes into police data folders and read the names of the files as input.
+
+    Returns:
+    Region names extract from all the files within a folder.
+    """
+    os.chdir('police_data')#Changing directory to police_data
+    os.chdir(os.listdir()[0])
+    file_list = os.listdir() #listing out all the file names.
+
+    regions = [filename.split('-')[2:-1] for filename in file_list]  # spliting and extracting the region names.
+    regions = ['-'.join(region) for region in regions] #join region names together.
+    os.chdir('../../')
+
+    return regions
+
 def combined_dataset(dataset_type):
     """
     Args:
@@ -18,7 +36,7 @@ def combined_dataset(dataset_type):
     folder_names_ls = os.listdir()
 
     #Constable names
-    regional_constables_ls = ['kent','south-yorkshire']
+    regional_constables_ls = extract_city_name_from_file()
     
     # initialize the dictionary to store DataFrames for each region
     regional_dic = {}
